@@ -822,13 +822,27 @@ void SVC::Break(u8 break_reason) {
 
 /// Used to output a message on a debug hardware unit - does nothing on a retail unit
 void SVC::OutputDebugString(VAddr address, s32 len) {
+    static std::string line_buf = "";
+
     if (len <= 0) {
         return;
     }
 
     std::string string(len, ' ');
     memory.ReadBlock(*kernel.GetCurrentProcess(), address, string.data(), len);
-    LOG_DEBUG(Debug_Emulated, "{}", string);
+
+    for (const char c : string){
+        if (c == '\0') {
+            return;
+        }
+        else if (c == '\n') {
+            LOG_DEBUG(Debug_Emulated, "{}", line_buf);
+            line_buf = "";
+        }
+        else {
+            line_buf += c;
+        }
+    }
 }
 
 /// Get resource limit
